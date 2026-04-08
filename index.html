@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[Your Name] - Financial Analysis Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="[cdn.jsdelivr.net](https://cdn.jsdelivr.net/npm/chart.js)"></script>
+</head>
+<body>
+    <header>
+        <h1>[Your Name]'s Financial Analysis Calculator</h1>
+        <p>Calculate Risk, Return, and Performance Measures</p>
+    </header>
+
+    <main>
+        <section class="input-section">
+            <h2>Input Parameters</h2>
+            
+            <div class="input-group">
+                <label for="stockTicker">Stock Ticker Symbol:</label>
+                <input type="text" id="stockTicker" placeholder="e.g., AAPL" value="AAPL">
+            </div>
+
+            <div class="input-group">
+                <label for="benchmarkTicker">Benchmark Ticker (Market Index):</label>
+                <input type="text" id="benchmarkTicker" placeholder="e.g., SPY" value="SPY">
+            </div>
+
+            <div class="input-group">
+                <label for="startDate">Start Date:</label>
+                <input type="date" id="startDate" value="2023-01-01">
+            </div>
+
+            <div class="input-group">
+                <label for="endDate">End Date:</label>
+                <input type="date" id="endDate" value="2024-01-01">
+            </div>
+
+            <div class="input-group">
+                <label for="riskFreeRate">Risk-Free Rate (Annual %):</label>
+                <input type="number" id="riskFreeRate" value="5.0" step="0.1">
+            </div>
+
+            <button id="calculateBtn" onclick="fetchDataAndCalculate()">Calculate</button>
+            <button id="manualBtn" onclick="showManualInput()">Enter Data Manually</button>
+        </section>
+
+        <!-- Manual Data Input Section -->
+        <section id="manualSection" class="input-section" style="display: none;">
+            <h2>Manual Data Entry</h2>
+            <p>Enter comma-separated daily closing prices:</p>
+            
+            <div class="input-group">
+                <label for="stockPrices">Stock Prices:</label>
+                <textarea id="stockPrices" rows="3" placeholder="150.25, 151.30, 149.80, 152.50, ..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="benchmarkPrices">Benchmark Prices:</label>
+                <textarea id="benchmarkPrices" rows="3" placeholder="450.00, 451.20, 449.50, 453.00, ..."></textarea>
+            </div>
+
+            <button onclick="calculateFromManual()">Calculate from Manual Data</button>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results" class="results-section" style="display: none;">
+            <h2>Analysis Results</h2>
+
+            <div class="results-grid">
+                <div class="result-card">
+                    <h3>Risk Measures</h3>
+                    <div class="metric">
+                        <span class="label">Beta (β):</span>
+                        <span id="betaValue" class="value">-</span>
+                        <span class="tooltip" title="Measures stock's sensitivity to market movements. β > 1 means more volatile than market.">ℹ️</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Alpha (α):</span>
+                        <span id="alphaValue" class="value">-</span>
+                        <span class="tooltip" title="Excess return compared to CAPM prediction. Positive alpha indicates outperformance.">ℹ️</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Volatility (σ):</span>
+                        <span id="volatilityValue" class="value">-</span>
+                        <span class="tooltip" title="Standard deviation of returns. Higher values indicate more risk.">ℹ️</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Correlation (ρ):</span>
+                        <span id="correlationValue" class="value">-</span>
+                        <span class="tooltip" title="Correlation between stock and benchmark returns. Ranges from -1 to 1.">ℹ️</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h3>Return Measures</h3>
+                    <div class="metric">
+                        <span class="label">Holding Period Return:</span>
+                        <span id="hprValue" class="value">-</span>
+                        <span class="tooltip" title="Total return over the entire period.">ℹ️</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Annualized Return:</span>
+                        <span id="annualReturnValue" class="value">-</span>
+                        <span class="tooltip" title="Return scaled to a yearly basis.">ℹ️</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Excess Return:</span>
+                        <span id="excessReturnValue" class="value">-</span>
+                        <span class="tooltip" title="Return above the benchmark.">ℹ️</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Benchmark Return:</span>
+                        <span id="benchmarkReturnValue" class="value">-</span>
+                        <span class="tooltip" title="Total return of the benchmark over the period.">ℹ️</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h3>Performance Ratios</h3>
+                    <div class="metric">
+                        <span class="label">Sharpe Ratio:</span>
+                        <span id="sharpeValue" class="value">-</span>
+                        <span class="tooltip" title="Risk-adjusted return. Higher is better. (Return - Rf) / Volatility">ℹ️</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Treynor Ratio:</span>
+                        <span id="treynorValue" class="value">-</span>
+                        <span class="tooltip" title="Excess return per unit of systematic risk. (Return - Rf) / Beta">ℹ️</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Information Ratio:</span>
+                        <span id="infoRatioValue" class="value">-</span>
+                        <span class="tooltip" title="Risk-adjusted excess return relative to benchmark.">ℹ️</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h3>CAPM Analysis</h3>
+                    <div class="metric">
+                        <span class="label">Expected Return (CAPM):</span>
+                        <span id="capmExpectedValue" class="value">-</span>
+                        <span class="tooltip" title="E(R) = Rf + β × (Rm - Rf)">ℹ️</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Market Risk Premium:</span>
+                        <span id="marketPremiumValue" class="value">-</span>
+                        <span class="tooltip" title="Benchmark return minus risk-free rate.">ℹ️</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <h3>Returns Comparison</h3>
+                    <canvas id="returnsChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>Security Characteristic Line (Beta Regression)</h3>
+                    <canvas id="regressionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Formulas Section -->
+            <div class="formulas-section">
+                <h3>Formulas Used</h3>
+                <div class="formula">
+                    <strong>Daily Returns:</strong> R<sub>t</sub> = (P<sub>t</sub> - P<sub>t-1</sub>) / P<sub>t-1</sub>
+                </div>
+                <div class="formula">
+                    <strong>Beta:</strong> β = Cov(R<sub>stock</sub>, R<sub>market</sub>) / Var(R<sub>market</sub>)
+                </div>
+                <div class="formula">
+                    <strong>Alpha (CAPM):</strong> α = R<sub>actual</sub> - [R<sub>f</sub> + β × (R<sub>m</sub> - R<sub>f</sub>)]
+                </div>
+                <div class="formula">
+                    <strong>Volatility:</strong> σ = √[Σ(R<sub>i</sub> - R̄)² / (n-1)]
+                </div>
+                <div class="formula">
+                    <strong>Sharpe Ratio:</strong> S = (R<sub>p</sub> - R<sub>f</sub>) / σ<sub>p</sub>
+                </div>
+                <div class="formula">
+                    <strong>Treynor Ratio:</strong> T = (R<sub>p</sub> - R<sub>f</sub>) / β
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="data-section">
+                <h3>Calculation Details</h3>
+                <div id="dataTable"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Built by [Your Name] | Financial Analysis Project | Data for educational purposes only</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
